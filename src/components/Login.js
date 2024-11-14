@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChakraProvider, extendTheme, Box, Button, Flex, FormControl, FormLabel, Heading, Input, Text, VStack, useToast, keyframes } from '@chakra-ui/react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
-import { FaUserGraduate, FaLock, FaUniversity } from 'react-icons/fa';
+import { FaUserGraduate, FaLock } from 'react-icons/fa';
 
 const floatKeyframes = keyframes`
   0% { transform: translateY(0px); }
@@ -115,11 +115,15 @@ const Login = () => {
 
   return (
     <ChakraProvider theme={theme}>
-      <Flex align="center" justify="center" minHeight="100vh" 
-        bgImage="url('https://source.unsplash.com/random?university')"
+      <Flex 
+        align="center" 
+        justify="center" 
+        minHeight="100vh" 
+        bgImage="url('/pentagon.jpg')"
         bgPosition="center"
         bgRepeat="no-repeat"
-        bgSize="cover">
+        bgSize="cover"
+      >
         <MotionBox
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}

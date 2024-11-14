@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSpring, animated } from 'react-spring';
 import {
@@ -37,10 +37,13 @@ import {
   FormControl,
   FormLabel,
 } from '@chakra-ui/react';
-import { FaHeart, FaUser, FaUsers, FaComments, FaGamepad, FaCalendarAlt, FaBars, FaEnvelope, FaQuestionCircle } from 'react-icons/fa';
+import { FaHeart, FaUser, FaUsers, FaComments, FaGamepad, FaCalendarAlt, FaBars, FaEnvelope, FaQuestionCircle, FaBookOpen, FaPencilAlt, FaShare } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { ParallaxProvider, Parallax } from 'react-scroll-parallax';
+import { Tilt } from 'react-tilt';
+import DynamicBackground from './DynamicBackground';
 
-// Custom theme (updated)
+// Custom theme
 const theme = extendTheme({
   fonts: {
     heading: "'Poppins', sans-serif",
@@ -72,10 +75,10 @@ const theme = extendTheme({
   },
 });
 
-// Animated text component (unchanged)
+// Animated text component
 const AnimatedText = ({ children }) => {
   const props = useSpring({
-    from: { opacity: 0, transform: 'translateY(50px)' },
+    from: { opacity: 0, transform: 'translateY(70px)' },
     to: { opacity: 1, transform: 'translateY(0)' },
     config: { tension: 300, friction: 10 },
   });
@@ -83,35 +86,37 @@ const AnimatedText = ({ children }) => {
   return <animated.div style={props}>{children}</animated.div>;
 };
 
-// FeatureCard component (updated)
+// FeatureCard component
 const FeatureCard = ({ icon, title, description, onClick }) => (
-  <motion.div
-    whileHover={{ scale: 1.05, rotateY: 10 }}
-    whileTap={{ scale: 0.95 }}
-  >
-    <Box
-      bg="rgba(255,255,255,0.1)"
-      backdropFilter="blur(10px)"
-      borderRadius="xl"
-      p={6}
-      cursor="pointer"
-      onClick={onClick}
-      textAlign="center"
-      boxShadow="0 0 15px rgba(255,105,180,0.3)"
-      color="white"
-      transition="all 0.3s"
-      height="100%"
+  <Tilt options={{ max: 25, scale: 1.05 }}>
+    <motion.div
+      whileHover={{ scale: 1.05, rotateY: 10 }}
+      whileTap={{ scale: 0.95 }}
     >
-      <VStack spacing={4}>
-        <Icon as={icon} boxSize={10} color="pink.400" />
-        <Heading size="md">{title}</Heading>
-        <Text fontSize="sm">{description}</Text>
-      </VStack>
-    </Box>
-  </motion.div>
+      <Box
+        bg="rgba(255,255,255,0.1)"
+        backdropFilter="blur(10px)"
+        borderRadius="xl"
+        p={6}
+        cursor="pointer"
+        onClick={onClick}
+        textAlign="center"
+        boxShadow="0 0 15px rgba(255,105,180,0.3)"
+        color="white"
+        transition="all 0.3s"
+        height="100%"
+      >
+        <VStack spacing={4}>
+          <Icon as={icon} boxSize={10} color="pink.400" />
+          <Heading size="md">{title}</Heading>
+          <Text fontSize="sm">{description}</Text>
+        </VStack>
+      </Box>
+    </motion.div>
+  </Tilt>
 );
 
-// Sidebar component (unchanged)
+// Sidebar component 
 const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   
@@ -122,6 +127,9 @@ const Sidebar = ({ isOpen, onClose }) => {
     { icon: FaComments, text: "Messages", path: "/messages" },
     { icon: FaCalendarAlt, text: "Events", path: "/events" },
     { icon: FaGamepad, text: "Games", path: "/games" },
+    { icon: FaBookOpen, text: "Study Groups", path: "/study-groups" },
+    { icon: FaPencilAlt, text: "Study", path: "/Study" },
+    {icon: FaShare, text: "Share", path: "/share" },
   ];
 
   return (
@@ -155,52 +163,48 @@ const Sidebar = ({ isOpen, onClose }) => {
   );
 };
 
-// TypewriterText component (new)
+//type writer function
 const TypewriterText = () => {
-  const [text, setText] = useState('');
-  const phrases = ['Connect', 'Date', 'Study', 'Succeed', 'Thrive'];
-  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const phrases = ['Connect', 'Date', 'Study', 'Succeed', 'Thrive','Experience','Explore','College','Events','Education','Upgrade','Exam'];
+  const [currentText, setCurrentText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const typeText = useCallback(() => {
+    const currentPhrase = phrases[currentIndex];
+    
+    if (isDeleting) {
+      setCurrentText(currentPhrase.substring(0, currentText.length - 1));
+      if (currentText.length === 1) {
+        setIsDeleting(false);
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % phrases.length);
+      }
+    } else {
+      setCurrentText(currentPhrase.substring(0, currentText.length + 1));
+      if (currentText === currentPhrase) {
+        setTimeout(() => setIsDeleting(true), 1500);
+      }
+    }
+  }, [currentIndex, isDeleting, currentText]);
 
   useEffect(() => {
-    let currentText = '';
-    let currentIndex = 0;
-    let isDeleting = false;
+    const timer = setTimeout(() => {
+      typeText();
+    }, isDeleting ? 300 : 350);
 
-    const typeEffect = () => {
-      const currentPhrase = phrases[currentPhraseIndex];
-      
-      if (isDeleting) {
-        currentText = currentPhrase.substring(0, currentIndex - 1);
-        currentIndex--;
-      } else {
-        currentText = currentPhrase.substring(0, currentIndex + 1);
-        currentIndex++;
-      }
-
-      setText(currentText);
-
-      if (!isDeleting && currentIndex === currentPhrase.length) {
-        setTimeout(() => {
-          isDeleting = true;
-        }, 1500);
-      } else if (isDeleting && currentIndex === 0) {
-        isDeleting = false;
-        setCurrentPhraseIndex((prevIndex) => (prevIndex + 1) % phrases.length);
-      }
-
-      const typingSpeed = isDeleting ? 20 :10 ;
-      setTimeout(typeEffect, typingSpeed);
-    };
-
-    typeEffect();
-  }, []);
+    return () => clearTimeout(timer);
+  }, [typeText, isDeleting]);
 
   return (
-    <Text fontSize="2xl" fontWeight="bold" color="pink.400">
-      {text}
+    <Text fontSize="2xl" fontWeight="bold" color="pink.400" height="40px">
+      {currentText}
+      <span className="animate-blink">|</span>
     </Text>
   );
 };
+
+
+
 
 // FAQ component (new)
 const FAQ = () => {
@@ -285,51 +289,9 @@ const ContactForm = () => {
   );
 };
 
-    
-// Animated background component
-const AnimatedBackground = () => {
-  return (
-    <Box
-      position="absolute"
-      top={0}
-      left={0}
-      right={0}
-      bottom={0}
-      overflow="hidden"
-      zIndex={-1}
-    >
-      {[...Array(50)].map((_, i) => (
-        <Box
-          key={i}
-          as={motion.div}
-          position="absolute"
-          bg="rgba(255, 255, 255, 0.1)"
-          borderRadius="50%"
-          initial={{
-            x: Math.random() * window.innerWidth,
-            y: Math.random() * window.innerHeight,
-            scale: Math.random() * 0.5 + 0.5,
-          }}
-          animate={{
-            y: [null, Math.random() * window.innerHeight],
-            transition: {
-              duration: Math.random() * 10 + 10,
-              repeat: Infinity,
-              repeatType: "reverse",
-              ease: "linear",
-            },
-          }}
-          style={{
-            width: `${Math.random() * 20 + 10}px`,
-            height: `${Math.random() * 20 + 10}px`,
-          }}
-        />
-      ))}
-    </Box>
-  );
-};
 
-// Update the main Home component to include the AnimatedBackground
+
+// Main Home component
 const Home = () => {
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -341,26 +303,29 @@ const Home = () => {
     { icon: FaUsers, title: "Study Buddy", description: "Find partners for group study", onClick: () => navigate('/study-groups') },
     { icon: FaComments, title: "Ice Breakers", description: "Fun conversation starters", onClick: () => navigate('/ice-breakers') },
     { icon: FaGamepad, title: "Fun Games", description: "Play games with matches", onClick: () => navigate('/games') },
+    { icon: FaPencilAlt, title: "Study", description: "Explore Study Resources, learn something new", onClick: () => navigate('/study') },
+    { icon: FaShare, title: "Share", description: "Share Study Resources", onClick: () => navigate('/share') }
   ];
 
   return (
     <ChakraProvider theme={theme}>
       <Box minHeight="100vh" position="relative" overflow="hidden">
-        {/* Enhanced Background */}
-        <Box
-          position="fixed"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          bg="linear-gradient(45deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)"
-          zIndex={-1}
-        >
-          <AnimatedBackground />
-        </Box>
+        {/* New Dynamic Background */}
+        <DynamicBackground />
 
         {/* Header */}
-        <Flex as="header" align="center" justify="space-between" wrap="wrap" padding="1.5rem" bg="rgba(0,0,0,0.5)" position="sticky" top={0} zIndex={10}>
+        <Flex
+          as="header"
+          align="center"
+          justify="space-between"
+          wrap="wrap"
+          padding="1.5rem"
+          bg="rgba(0,0,0,0.5)"
+          position="sticky"
+          top={0}
+          zIndex={10}
+          backdropFilter="blur(10px)"
+        >
           <Flex align="center" mr={5}>
             <Heading as="h1" size="lg" letterSpacing={'tighter'}>
               UniVibe
@@ -409,7 +374,7 @@ const Home = () => {
                 </Heading>
                 <TypewriterText />
                 <Text fontSize="xl" mb={8} mt={4}>
-                  Your ultimate college companion for romance, friendship, and success
+                  Your Ultimate College companion for connecting, dating, and studying
                 </Text>
                 <Button
                   as={motion.button}
@@ -427,7 +392,7 @@ const Home = () => {
             {/* Features Section */}
             <Box>
               <Heading size="xl" mb={6} textAlign="center">Discover UniVibe Magic</Heading>
-              <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
+              <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }} gap={6}>
                 {features.map((feature, index) => (
                   <FeatureCard key={index} {...feature} />
                 ))}
@@ -438,6 +403,9 @@ const Home = () => {
             <Box textAlign="center" py={10}>
               <Heading size="xl" mb={4}>Ready to Find Your Perfect Match?</Heading>
               <Button
+                as={motion.button}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 size="lg"
                 colorScheme="teal"
                 onClick={() => navigate('/signup')}
@@ -477,7 +445,16 @@ const Home = () => {
         </Container>
 
         {/* Footer */}
-        <Box as="footer" mt={20} py={10} bg="rgba(0,0,0,0.2)" textAlign="center" position="relative" zIndex={1}>
+        <Box
+          as="footer"
+          mt={20}
+          py={10}
+          bg="rgba(0,0,0,0.2)"
+          textAlign="center"
+          position="relative"
+          zIndex={1}
+          backdropFilter="blur(10px)"
+        >
           <Text>&copy; 2024 UniVibe. All rights reserved.</Text>
         </Box>
       </Box>
